@@ -39,7 +39,7 @@ lazy_static::lazy_static! {
 
 pub struct Keyboard {
     start_status: String,
-    start_style: String,
+    start_class: String,
     dict: serde_json::Value,
     nr_word: usize,
     cur_index: usize,
@@ -71,7 +71,7 @@ impl Component for Keyboard {
             cur_chaper: cur_chaper,
             inputs: String::with_capacity(100),
             start_status: String::from("Start"),
-            start_style: String::from("background-color:#F5F5F5"),
+            start_class: String::from("btn btn-primary btn-sm"),
             _producer: EventBus::bridge(link.callback(Key::SetText)),
             link,
         }
@@ -191,7 +191,7 @@ impl Component for Keyboard {
 	    Key::Submit => {
                 if self.start_status == String::from("Start") {
                     self.start_status = String::from("Pause");
-                    self.start_style = String::from("background-color:#008f53");
+                    self.start_class = String::from("btn btn-secondary btn-sm");
 
                     let word = self.dict[self.cur_index]["name"].as_str().unwrap();
                     let word_url = AUDIO_URL.to_string() + &word.to_string();
@@ -199,7 +199,7 @@ impl Component for Keyboard {
                     audio.play().unwrap();
                 } else {
                     self.start_status = String::from("Start");
-                    self.start_style = String::from("background-color:#F5F5F5");
+                    self.start_class = String::from("btn btn-primary btn-sm");
                 }
                 ConsoleService::info("> window key [enter] pressed.");
 	    }
@@ -224,8 +224,11 @@ impl Component for Keyboard {
 
         html! {
             <>
-               <div id="buttons">
-                   <select onchange=self.link.callback(| v:html::ChangeData | {
+               <div class="row justify-content-end">
+                   <div class="col-7"></div>
+                   <div class="col-2">
+                   <select class="form-control form-control-sm" id="exampleFormControlSelect2"
+                       onchange=self.link.callback(| v:html::ChangeData | {
                            match v {
                                html::ChangeData::Select(ele) => {
                                    Key::SelectLevel(ele.value())
@@ -237,7 +240,10 @@ impl Component for Keyboard {
                        } )>
                        { for DICT_INDEX.iter().map(|b| html! { <option value=b>{ b }</option> }) }
                    </select>
-                   <select onchange=self.link.callback(| v:html::ChangeData | {
+                   </div>
+                   <div class="col-2">
+                   <select class="form-control form-control-sm" id="exampleFormControlSelect2"
+                        onchange=self.link.callback(| v:html::ChangeData | {
                            match v {
                                html::ChangeData::Select(chp) => {
                                    Key::SelectChapter(chp.value().parse::<usize>().unwrap())
@@ -257,24 +263,35 @@ impl Component for Keyboard {
                            })
                        }
                    </select>
-                   <button onclick=self.link.callback(|_| Key::Submit) style=self.start_style>
+                   </div>
+                   <div class="col-1">
+                   <button onclick=self.link.callback(|_| Key::Submit) type="button" class=&self.start_class>
                        { &self.start_status }
                    </button>
-               </div>
+                   </div>
+                </div>
                 <div id="word">
-                   { for inputs_byte.iter().map(|b| html! { <font color="red">{ *b as char }</font> }) }
-                   { for name_byte_last.iter().map(|b| html! { <font color="white">{ *b as char }</font> }) }
+                   { for inputs_byte.iter().map(|b| html! { <font color="#059669">{ *b as char }</font> }) }
+                   { for name_byte_last.iter().map(|b| html! { <font color="#4B5563">{ *b as char }</font> }) }
                 </div>
                 <div id="trans">
                    <p> { &word_trans } </p>
                 </div>
-                <div>
-                   <button style="float:left;" onclick=self.link.callback(|_| Key::WordNextPre(String::from("prev")))>
-                       { "Prev" }
+                <div class="row">
+                   <div class="col-2"></div>
+                   <div class="col-2">
+                   <button type="button" class="btn btn-outline-info"
+                        onclick=self.link.callback(|_| Key::WordNextPre(String::from("prev")))>
+                        { "Prev" }
                    </button>
-                   <button style="float:right;" onclick=self.link.callback(|_| Key::WordNextPre(String::from("next")))>
-                       { "Next" }
+                   </div>
+                   <div class="col-6"></div>
+                   <div class="col-2">
+                   <button type="button" class="btn btn-outline-info"
+                        onclick=self.link.callback(|_| Key::WordNextPre(String::from("next")))>
+                        { "Next" }
                    </button>
+                   </div>
                 </div>
             </>
         }

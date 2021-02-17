@@ -22,7 +22,7 @@ pub struct Body {
 impl Body {
     fn get_current_time() -> String {
         let date = js_sys::Date::new_0();
-        String::from(date.to_locale_time_string("en-US"))
+        String::from("Time: ") + &String::from(date.to_locale_time_string("en-US"))
     }
 }
 
@@ -104,14 +104,15 @@ impl Component for Body {
     fn view(&self) -> Html {
         html! {
             <>
-                <div id="buttons">
-                    <button style="display:none" onclick=self.link.callback(|_| Msg::ButtonStart)>
-                        { "Setting" }
-                    </button>
-                </div>
-                <div id="wrapper">
-                    <div id="time">
-                        { &self.time }
+                <div class="row justify-content-end">
+                    <div class="col-sm-8"></div>
+                    <div class="col-sm-4">
+                        <button style="display:none" onclick=self.link.callback(|_| Msg::ButtonStart)>
+                            { "Setting" }
+                        </button>
+                    </div>
+                     <div class="col-sm-2">
+                         <p> <font color="black"> { &self.time } </font></p>
                     </div>
                 </div>
             </>

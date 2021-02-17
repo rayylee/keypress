@@ -1,0 +1,47 @@
+@import "../node_modules/bootstrap/scss/bootstrap";
+
+#header {
+    font-size: 30px;
+    color:#818CF8;
+    font-weight:bold;
+}
+
+.app-logo {
+    animation: infinite 4s linear;
+    height: 30px;
+    width: 30px;
+
+}
+
+#footer {
+    text-align: center;
+}
+
+#buttons {
+    text-align: right;
+}
+
+#time {
+    text-align: center;
+    float: right;
+    color: black;
+}
+
+#word {
+    text-align: center;
+    font-size: 12vh;
+    float: center;
+}
+
+#trans{
+    text-align: center;
+    padding: 10% 0;
+    p {
+        color: black;
+    }
+}
+
+#messages {
+    float: right;
+    bottom: 0;
+}

@@ -1,47 +1,11 @@
+@import "scss/style.scss";
+
 $font-stack:    Roboto, sans-serif;
-$primary-color: #008f53;
+$primary-color: #FAF9FF;
 
 body {
     font: 100% $font-stack;
     color: white;
     background-color: $primary-color;
-}
-
-#header {
-    text-align: left;
-}
-
-#footer {
-    text-align: center;
-}
-
-#buttons {
-    text-align: right;
-}
-
-#wrapper {
-    overflow: hidden;
-    width: 100%;
-}
-
-#time {
-    text-align: center;
-    float: left;
-}
-
-#word {
-    text-align: center;
-    font-size: 12vh;
-    float: center;
-}
-
-#trans{
-    text-align: center;
-    padding: 10% 0;
-}
-
-#messages {
-    float: right;
-    bottom: 0;
 }
 
