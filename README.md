@@ -26,6 +26,8 @@ trunk serve --release
 
 You can visit in the website [https://rayylee.github.io/keypress](https://rayylee.github.io/keypress)
 
+![screenshot](/assets/screenshot.png)
+
 ## Acknowledgments
 
 - [qwerty-learner](https://github.com/Kaiyiwing/qwerty-learner) - Thanks for designing the view!
