@@ -1,4 +1,16 @@
-@import "../node_modules/bootstrap/scss/bootstrap";
+// https://getbootstrap.com/docs/4.0/getting-started/theming
+// Option A: Include all of Bootstrap
+// @import "../node_modules/bootstrap/scss/bootstrap";
+
+// Option B: Include parts of Bootstrap
+// Required
+@import "../node_modules/bootstrap/scss/functions";
+@import "../node_modules/bootstrap/scss/variables";
+@import "../node_modules/bootstrap/scss/mixins";
+// Optional
+@import "../node_modules/bootstrap/scss/bootstrap-grid";
+@import "../node_modules/bootstrap/scss/buttons";
+@import "../node_modules/bootstrap/scss/forms";
 
 #header {
     font-size: 30px;
