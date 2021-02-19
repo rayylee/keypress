@@ -23,18 +23,18 @@ impl Component for Header {
             <>
                 <div id="header">
                     <div class="row justify-content-start">
-                        <div class="col-sm-2">
+                        <div class="col-md-4">
                             <div class="row justify-content-start">
-                                <div class="col-sm-2">
+                                <div class="col-md-1">
                                     <img src="favicon.ico" class="app-logo"/>
                                 </div>
-                                <div class="col-sm-2">
+                                <div class="col-md-1">
                                     { "KeyPress"  }
                                 </div>
-                                <div class="col-sm-8"></div>
+                                <div class="col-md-10"></div>
                             </div>
                         </div>
-                        <div class="col-sm-8"></div>
+                        <div class="col-md-8"></div>
                     </div>
                 </div>
             </>
