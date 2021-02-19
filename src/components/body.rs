@@ -28,7 +28,7 @@ impl Component for Body {
             Duration::from_secs(60),
             // This callback doesn't send any message to a scope
             Callback::from(|_| {
-                ConsoleService::info("> Standalone timer callback.");
+                ConsoleService::debug("Standalone timer callback.");
             }),
         );
 

@@ -50,6 +50,52 @@ pub struct Keyboard {
     link: ComponentLink<Self>,
 }
 
+impl Keyboard {
+    fn play_audio_from_url(&self, url: &str) {
+        // https://docs.rs/web-sys/0.3.19/web_sys/struct.HtmlAudioElement.html
+        let audio = HtmlAudioElement::new_with_src(url).unwrap();
+        audio.play().unwrap();
+    }
+
+    fn play_audio_from_array(&self, array: &'static [u8]) {
+        let array_u8: js_sys::Uint8Array = js_sys::Uint8Array::from(array);
+        let array_buf: js_sys::ArrayBuffer = array_u8.buffer();
+
+        // https://docs.rs/web-sys/0.3.19/web_sys/struct.AudioContext.html
+        let audio_ctx = AudioContext::new().unwrap();
+        let song = audio_ctx.create_buffer_source().unwrap();
+        let destination: AudioDestinationNode = audio_ctx.destination();
+
+        let handler = move |buf: AudioBuffer| {
+            let buffer: Option<&AudioBuffer> = Some(&buf);
+
+            song.set_buffer(buffer);
+            song.connect_with_audio_node(destination.as_ref()).unwrap();
+            song.start().unwrap();
+        };
+
+        // shoud be 'static
+        let handle: Box<dyn FnMut(_) + 'static> = Box::new(handler) as Box<dyn FnMut(_)>;
+
+        let cb = Closure::wrap(handle);
+
+        audio_ctx.decode_audio_data_with_success_callback(&array_buf,
+            cb.as_ref().unchecked_ref()).unwrap();
+
+        // don't forget
+        cb.forget();
+    }
+
+    fn play_word(&self, word: &str) {
+        let word_url = AUDIO_URL.to_string() + &word.to_string();
+        self.play_audio_from_url(&word_url);
+    }
+
+    fn play_click(&self) {
+        self.play_audio_from_array(SOUND_CLICK);
+    }
+}
+
 impl Component for Keyboard {
     type Message = Key;
     type Properties = ();
@@ -84,39 +130,13 @@ impl Component for Keyboard {
                     return true;
                 }
 
-                let array_u8: js_sys::Uint8Array = js_sys::Uint8Array::from(SOUND_CLICK);
+                self.play_click();
 
-                let array_buf: js_sys::ArrayBuffer = array_u8.buffer();
-
-                let audio_ctx = AudioContext::new().unwrap();
-
-                let song = audio_ctx.create_buffer_source().unwrap();
-                let destination: AudioDestinationNode = audio_ctx.destination();
-
-                let handler = move |buf: AudioBuffer| {
-                    let buffer: Option<&AudioBuffer> = Some(&buf);
-
-                    song.set_buffer(buffer);
-                    song.connect_with_audio_node(destination.as_ref()).unwrap();
-                    song.start().unwrap();
-                };
-
-                let handle: Box<dyn FnMut(_) + 'static> = Box::new(handler) as Box<dyn FnMut(_)>;
-
-                let cb = Closure::wrap(handle);
-
-                audio_ctx.decode_audio_data_with_success_callback(&array_buf,
-                    cb.as_ref().unchecked_ref()).unwrap();
-
-                cb.forget();
-
-                let b = text.as_bytes()[0];
-                let c: char = b as char;
-                self.inputs.push(c);
+                let chr: char = text.as_bytes()[0] as char;
+                self.inputs.push(chr);
 
                 let word = self.dict[self.cur_index]["name"].as_str().unwrap();
 
-                let mut need_play = false;
                 if word.starts_with(&self.inputs) {
                     if word.len() == self.inputs.len() {
                         self.inputs.clear();
@@ -125,29 +145,17 @@ impl Component for Keyboard {
                             self.cur_index = 0;
                         }
                         self.cur_chaper = self.cur_index / 20 + 1;
-                        need_play = true;
 
+                        self.play_word(self.dict[self.cur_index]["name"].as_str().unwrap());
                     }
                 } else {
                     self.inputs.clear();
                 }
-
-                if need_play {
-                    let word = self.dict[self.cur_index]["name"].as_str().unwrap();
-                    let word_url = AUDIO_URL.to_string() + &word.to_string();
-                    let audio = HtmlAudioElement::new_with_src(word_url.as_str()).unwrap();
-                    audio.play().unwrap();
-                }
-
-                let word = self.dict[self.cur_index]["name"].as_str().unwrap();
-		let msg = format!("> key:{} for:{} inputs:{}, level:{}, chaper:{}, words:{}.",
-		    text, word, self.inputs, self.cur_level, self.cur_chaper, self.nr_word);
-                ConsoleService::info(&msg);
 	    }
 	    Key::SelectLevel(level) => {
                 self.cur_level = level;
                 let msg = format!("> select level: {}.", self.cur_level);
-                ConsoleService::info(&msg);
+                ConsoleService::debug(&msg);
 
                 self.dict = serde_json::from_str(DICT_MAP[&self.cur_level]).unwrap();
                 self.nr_word = self.dict.as_array().unwrap().len();
@@ -158,7 +166,7 @@ impl Component for Keyboard {
 	    Key::SelectChapter(chaper) => {
                 self.cur_index = (chaper - 1 ) * 20;
                 let msg = format!("> select chaper: {}.", chaper);
-                ConsoleService::info(&msg);
+                ConsoleService::debug(&msg);
             }
 	    Key::WordNextPre(text) => {
                 if self.start_status == String::from("Start") {
@@ -179,29 +187,18 @@ impl Component for Keyboard {
                 }
                 self.cur_chaper = self.cur_index / 20 + 1;
 
-                let word = self.dict[self.cur_index]["name"].as_str().unwrap();
-                let word_url = AUDIO_URL.to_string() + &word.to_string();
-                let audio = HtmlAudioElement::new_with_src(word_url.as_str()).unwrap();
-                audio.play().unwrap();
-
-                let msg = format!("> level:{}, chaper:{}, index:{}, words:{}.",
-                    self.cur_level, self.cur_chaper, self.cur_index, self.nr_word);
-                ConsoleService::info(&msg);
+                self.play_word(self.dict[self.cur_index]["name"].as_str().unwrap());
             }
 	    Key::Submit => {
                 if self.start_status == String::from("Start") {
                     self.start_status = String::from("Pause");
                     self.start_class = String::from("btn btn-secondary btn-sm");
 
-                    let word = self.dict[self.cur_index]["name"].as_str().unwrap();
-                    let word_url = AUDIO_URL.to_string() + &word.to_string();
-                    let audio = HtmlAudioElement::new_with_src(word_url.as_str()).unwrap();
-                    audio.play().unwrap();
+                    self.play_word(self.dict[self.cur_index]["name"].as_str().unwrap());
                 } else {
                     self.start_status = String::from("Start");
                     self.start_class = String::from("btn btn-primary btn-sm");
                 }
-                ConsoleService::info("> window key [enter] pressed.");
 	    }
 	}
 
