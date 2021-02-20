@@ -94,6 +94,105 @@ impl Keyboard {
     fn play_click(&self) {
         self.play_audio_from_array(SOUND_CLICK);
     }
+
+    fn view_select_button(&self) -> Html {
+        let chapers: Vec<usize> = (1..(self.nr_word / 20 + 1)).collect();
+
+        html! {
+            <>
+               <div class="row justify-content-end">
+                   <div class="col-7"></div>
+                   <div class="col-2">
+                   <select class="form-control form-control-sm" id="exampleFormControlSelect2"
+                       onchange=self.link.callback(| v:html::ChangeData | {
+                           match v {
+                               html::ChangeData::Select(ele) => {
+                                   Key::SelectLevel(ele.value())
+                               }
+                               _ => {
+                                   Key::SelectLevel(DICT_INDEX[0].to_string())
+                               }
+                           }
+                       } )>
+                       { for DICT_INDEX.iter().map(|b| html! { <option value=b>{ b }</option> }) }
+                   </select>
+                   </div>
+                   <div class="col-2">
+                   <select class="form-control form-control-sm" id="exampleFormControlSelect2"
+                        onchange=self.link.callback(| v:html::ChangeData | {
+                           match v {
+                               html::ChangeData::Select(chp) => {
+                                   Key::SelectChapter(chp.value().parse::<usize>().unwrap())
+                               }
+                               _ => {
+                                   Key::SelectChapter(1)
+                               }
+                           }
+                       } )>
+                       {
+                           for chapers.iter().map(|b| {
+                               if *b == self.cur_chaper {
+                                   html! { <option value=b selected=true>{ format!("Charper {}", b) }</option> }
+                               } else {
+                                   html! { <option value=b>{ format!("Charper {}", b) }</option> }
+                               }
+                           })
+                       }
+                   </select>
+                   </div>
+                   <div class="col-1">
+                   <button onclick=self.link.callback(|_| Key::Submit) type="button" class=&self.start_class>
+                       { &self.start_status }
+                   </button>
+                   </div>
+                </div>
+            </>
+        }
+    }
+
+    fn view_word(&self) -> Html {
+        let word = self.dict.get(self.cur_index).unwrap();
+        let word_name: &str = word["name"].as_str().unwrap();
+        let word_trans: &str = word["trans"][0].as_str().unwrap();
+        let name_byte = word_name.as_bytes();
+        let inputs_byte = self.inputs.as_bytes();
+        let name_byte_last = &name_byte[inputs_byte.len()..name_byte.len()];
+
+        html! {
+            <>
+                <div id="word">
+                   { for inputs_byte.iter().map(|b| html! { <font color="#059669">{ *b as char }</font> }) }
+                   { for name_byte_last.iter().map(|b| html! { <font color="#4B5563">{ *b as char }</font> }) }
+                </div>
+                <div id="trans">
+                   <p> { &word_trans } </p>
+                </div>
+            </>
+        }
+    }
+
+    fn view_bottom_button(&self) -> Html {
+        html! {
+            <>
+                <div class="row">
+                   <div class="col-2"></div>
+                   <div class="col-2">
+                   <button type="button" class="btn btn-outline-info"
+                        onclick=self.link.callback(|_| Key::WordNextPre(String::from("prev")))>
+                        { "Prev" }
+                   </button>
+                   </div>
+                   <div class="col-6"></div>
+                   <div class="col-2">
+                   <button type="button" class="btn btn-outline-info"
+                        onclick=self.link.callback(|_| Key::WordNextPre(String::from("next")))>
+                        { "Next" }
+                   </button>
+                   </div>
+                </div>
+            </>
+        }
+    }
 }
 
 impl Component for Keyboard {
@@ -210,85 +309,14 @@ impl Component for Keyboard {
     }
 
     fn view(&self) -> Html {
-        let word = self.dict.get(self.cur_index).unwrap();
-        let word_name: &str = word["name"].as_str().unwrap();
-        let word_trans: &str = word["trans"][0].as_str().unwrap();
-        let name_byte = word_name.as_bytes();
-        let inputs_byte = self.inputs.as_bytes();
-        let name_byte_last = &name_byte[inputs_byte.len()..name_byte.len()];
-
-        let chapers: Vec<usize> = (1..(self.nr_word / 20 + 1)).collect();
-
         html! {
             <>
-               <div class="row justify-content-end">
-                   <div class="col-7"></div>
-                   <div class="col-2">
-                   <select class="form-control form-control-sm" id="exampleFormControlSelect2"
-                       onchange=self.link.callback(| v:html::ChangeData | {
-                           match v {
-                               html::ChangeData::Select(ele) => {
-                                   Key::SelectLevel(ele.value())
-                               }
-                               _ => {
-                                   Key::SelectLevel(DICT_INDEX[0].to_string())
-                               }
-                           }
-                       } )>
-                       { for DICT_INDEX.iter().map(|b| html! { <option value=b>{ b }</option> }) }
-                   </select>
-                   </div>
-                   <div class="col-2">
-                   <select class="form-control form-control-sm" id="exampleFormControlSelect2"
-                        onchange=self.link.callback(| v:html::ChangeData | {
-                           match v {
-                               html::ChangeData::Select(chp) => {
-                                   Key::SelectChapter(chp.value().parse::<usize>().unwrap())
-                               }
-                               _ => {
-                                   Key::SelectChapter(1)
-                               }
-                           }
-                       } )>
-                       {
-                           for chapers.iter().map(|b| {
-                               if *b == self.cur_chaper {
-                                   html! { <option value=b selected=true>{ format!("Charper {}", b) }</option> }
-                               } else {
-                                   html! { <option value=b>{ format!("Charper {}", b) }</option> }
-                               }
-                           })
-                       }
-                   </select>
-                   </div>
-                   <div class="col-1">
-                   <button onclick=self.link.callback(|_| Key::Submit) type="button" class=&self.start_class>
-                       { &self.start_status }
-                   </button>
-                   </div>
+                <div class="container-fluid">
+                    { self.view_select_button() }
                 </div>
-                <div id="word">
-                   { for inputs_byte.iter().map(|b| html! { <font color="#059669">{ *b as char }</font> }) }
-                   { for name_byte_last.iter().map(|b| html! { <font color="#4B5563">{ *b as char }</font> }) }
-                </div>
-                <div id="trans">
-                   <p> { &word_trans } </p>
-                </div>
-                <div class="row">
-                   <div class="col-2"></div>
-                   <div class="col-2">
-                   <button type="button" class="btn btn-outline-info"
-                        onclick=self.link.callback(|_| Key::WordNextPre(String::from("prev")))>
-                        { "Prev" }
-                   </button>
-                   </div>
-                   <div class="col-6"></div>
-                   <div class="col-2">
-                   <button type="button" class="btn btn-outline-info"
-                        onclick=self.link.callback(|_| Key::WordNextPre(String::from("next")))>
-                        { "Next" }
-                   </button>
-                   </div>
+                { self.view_word() }
+                <div class="container-fluid">
+                    { self.view_bottom_button() }
                 </div>
             </>
         }
