@@ -60,10 +60,10 @@ impl Component for Body {
     fn view(&self) -> Html {
         html! {
             <>
-                <div class="container">
+                <div class="container-fluid">
                     <div class="row justify-content-end">
-                        <div class="col-md-10"></div>
-                        <div class="col-md-2">
+                        <div class="col-10"></div>
+                        <div class="col-2">
                             <p> <font color="black"> { &self.time } </font></p>
                         </div>
                     </div>
