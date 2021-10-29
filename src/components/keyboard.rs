@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::{HashMap}, fmt::{Display, Formatter, Result}, slice::Iter};
 
 use yew::{html, Bridge, Component, ComponentLink, Html, ShouldRender};
 use yew::services::{ConsoleService};
@@ -9,7 +9,44 @@ use wasm_bindgen::{JsCast, prelude::Closure};
 use crate::common::msg::Key;
 use crate::common::event_bus::{EventBus};
 
-static AUDIO_URL: &str = "http://dict.youdao.com/dictvoice?type=0&audio=";
+
+macro_rules! audio_url{
+    ($($arg:tt)*) => {
+        format!("http://dict.youdao.com/dictvoice?type={prounc}&audio={word}", $($arg)*)
+    };
+}
+
+#[derive(Clone, Copy)]
+enum Pronunc{
+    AmE = 0,
+    BrE = 1,
+}
+
+impl Pronunc {
+    pub fn iterator() -> Iter<'static, Pronunc> {
+        static PRONUNC_S: [Pronunc; 2] = [Pronunc::AmE, Pronunc::BrE];
+        PRONUNC_S.iter()
+    }
+}
+
+impl Display for Pronunc {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        match self {
+            Pronunc::AmE => write!(f, "Amercan pronunciations"),
+            Pronunc::BrE => write!(f, "British pronunciations")
+        }
+    }
+}
+
+impl From<u8> for Pronunc {
+    fn from(v: u8) -> Pronunc {
+        match v {
+            0 => Pronunc::AmE,
+            _ => Pronunc::BrE
+        }
+    }
+}
+
 
 const SOUND_CLICK: &[u8] = include_bytes!("../content/sound/click.wav");
 
@@ -48,6 +85,7 @@ pub struct Keyboard {
     inputs: String,
     _producer: Box<dyn Bridge<EventBus>>,
     link: ComponentLink<Self>,
+    prounc: Pronunc, // Switch Amercan English and British English
 }
 
 impl Keyboard {
@@ -87,7 +125,7 @@ impl Keyboard {
     }
 
     fn play_word(&self, word: &str) {
-        let word_url = AUDIO_URL.to_string() + &word.to_string();
+        let word_url = audio_url!(prounc=self.prounc as u8, word=word);
         self.play_audio_from_url(&word_url);
     }
 
@@ -101,7 +139,20 @@ impl Keyboard {
         html! {
             <>
                <div class="row justify-content-end">
-                   <div class="col-7"></div>
+                    <div class= "col-1">
+                        <select class="form-control form-control-sm" id="exampleFormControlSelect2"
+                        onchange=self.link.callback(| v:html::ChangeData | {
+                            match v {
+                                html::ChangeData::Select(ele) => {
+                                    Key::SelectProunc(ele.value().parse::<u8>().unwrap_or(0))
+                                }
+                                _ => Key::SelectProunc(Pronunc::AmE as u8)
+                            }
+                        })>
+                        {for Pronunc::iterator().map(|o| html!{<option value=*o as u8>{o}</option>} )}
+                        </select>
+                   </div>
+                   <div class="col-6"></div>
                    <div class="col-2">
                    <select class="form-control form-control-sm" id="exampleFormControlSelect2"
                        onchange=self.link.callback(| v:html::ChangeData | {
@@ -207,6 +258,7 @@ impl Component for Keyboard {
         let nr_word: usize = dict.as_array().unwrap().len();
         let cur_index = 0;
         let cur_chaper = cur_index / 20 + 1;
+        let prounc = Pronunc::AmE; // Amercan English as default
 
         Self {
             dict: dict,
@@ -219,6 +271,7 @@ impl Component for Keyboard {
             start_class: String::from("btn btn-primary btn-sm"),
             _producer: EventBus::bridge(link.callback(Key::SetText)),
             link,
+            prounc,
         }
     }
 
@@ -251,6 +304,12 @@ impl Component for Keyboard {
                     self.inputs.clear();
                 }
 	    }
+        Key::SelectProunc(prounc) => {
+            self.prounc = prounc.into();
+            let msg = format!("> select audio type: {}.", self.prounc);
+            ConsoleService::debug(&msg);
+            self.play_word(self.dict[self.cur_index]["name"].as_str().unwrap());
+        }
 	    Key::SelectLevel(level) => {
                 self.cur_level = level;
                 let msg = format!("> select level: {}.", self.cur_level);
