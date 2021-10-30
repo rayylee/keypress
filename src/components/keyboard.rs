@@ -94,7 +94,7 @@ impl Keyboard {
     fn play_audio_from_url(&self, url: &str) {
         // https://docs.rs/web-sys/0.3.19/web_sys/struct.HtmlAudioElement.html
         let audio = HtmlAudioElement::new_with_src(url).unwrap();
-        audio.play().unwrap();
+        let _ = audio.play().unwrap();
     }
 
     fn play_audio_from_array(&self, array: &'static [u8]) {
@@ -119,7 +119,7 @@ impl Keyboard {
 
         let cb = Closure::wrap(handle);
 
-        audio_ctx
+        let _ = audio_ctx
             .decode_audio_data_with_success_callback(&array_buf, cb.as_ref().unchecked_ref())
             .unwrap();
 
