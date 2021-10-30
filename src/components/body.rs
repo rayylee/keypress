@@ -1,9 +1,7 @@
-use std::{
-    time::Duration,
-};
-use yew::{html, Callback, Component, ComponentLink, Html, ShouldRender};
+use std::time::Duration;
 use yew::services::interval::{IntervalService, IntervalTask};
-use yew::services::{ConsoleService};
+use yew::services::ConsoleService;
+use yew::{html, Callback, Component, ComponentLink, Html, ShouldRender};
 
 use crate::common::msg::Msg;
 

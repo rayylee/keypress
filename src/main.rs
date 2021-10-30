@@ -1,21 +1,16 @@
 // From https://www.syntaxsuccess.com/viewarticle/experimenting-with-rust-and-webassembly
 #![recursion_limit = "1024"]
 
-mod components;
 mod common;
+mod components;
 
+use wasm_bindgen::{prelude::Closure, JsCast};
+use web_sys::KeyboardEvent;
+use yew::agent::Dispatched;
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
-use yew::agent::{Dispatched};
-use web_sys::{KeyboardEvent};
-use wasm_bindgen::{JsCast, prelude::Closure};
 
-use crate::components::{
-    header::Header,
-    footer::Footer,
-    body::Body,
-    keyboard::Keyboard,
-};
 use crate::common::event_bus::{EventBus, Request};
+use crate::components::{body::Body, footer::Footer, header::Header, keyboard::Keyboard};
 
 pub struct Model;
 
@@ -57,7 +52,7 @@ fn main() {
     let mut event_bus = EventBus::dispatcher();
     let window = web_sys::window().unwrap();
 
-    let handler_submit = move | e: KeyboardEvent | {
+    let handler_submit = move |e: KeyboardEvent| {
         e.stop_propagation();
         // link.callback(move | e: KeyboardEvent | Key::SetText(e.key()));
         // event_bus.send(Request::EventBusMsg("Message received".to_owned()));
@@ -68,8 +63,9 @@ fn main() {
 
     let cb = Closure::wrap(handler);
 
-    window.add_event_listener_with_callback("keydown",
-        cb.as_ref().unchecked_ref()).unwrap();
+    window
+        .add_event_listener_with_callback("keydown", cb.as_ref().unchecked_ref())
+        .unwrap();
     cb.forget();
 
     yew::start_app::<Model>();
