@@ -1,14 +1,17 @@
-use std::{collections::{HashMap}, fmt::{Display, Formatter, Result}, slice::Iter};
+use std::{
+    collections::HashMap,
+    fmt::{Display, Formatter, Result},
+    slice::Iter,
+};
 
-use yew::{html, Bridge, Component, ComponentLink, Html, ShouldRender};
-use yew::services::{ConsoleService};
+use wasm_bindgen::{prelude::Closure, JsCast};
+use web_sys::{AudioBuffer, AudioContext, AudioDestinationNode, HtmlAudioElement};
 use yew::agent::Bridged;
-use web_sys::{HtmlAudioElement, AudioBuffer, AudioContext, AudioDestinationNode};
-use wasm_bindgen::{JsCast, prelude::Closure};
+use yew::services::ConsoleService;
+use yew::{html, Bridge, Component, ComponentLink, Html, ShouldRender};
 
+use crate::common::event_bus::EventBus;
 use crate::common::msg::Key;
-use crate::common::event_bus::{EventBus};
-
 
 macro_rules! audio_url{
     ($($arg:tt)*) => {
@@ -17,7 +20,7 @@ macro_rules! audio_url{
 }
 
 #[derive(Clone, Copy)]
-enum Pronunc{
+enum Pronunc {
     AmE = 0,
     BrE = 1,
 }
@@ -33,7 +36,7 @@ impl Display for Pronunc {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Pronunc::AmE => write!(f, "Amercan pronunciations"),
-            Pronunc::BrE => write!(f, "British pronunciations")
+            Pronunc::BrE => write!(f, "British pronunciations"),
         }
     }
 }
@@ -42,11 +45,10 @@ impl From<u8> for Pronunc {
     fn from(v: u8) -> Pronunc {
         match v {
             0 => Pronunc::AmE,
-            _ => Pronunc::BrE
+            _ => Pronunc::BrE,
         }
     }
 }
-
 
 const SOUND_CLICK: &[u8] = include_bytes!("../content/sound/click.wav");
 
@@ -117,15 +119,16 @@ impl Keyboard {
 
         let cb = Closure::wrap(handle);
 
-        audio_ctx.decode_audio_data_with_success_callback(&array_buf,
-            cb.as_ref().unchecked_ref()).unwrap();
+        audio_ctx
+            .decode_audio_data_with_success_callback(&array_buf, cb.as_ref().unchecked_ref())
+            .unwrap();
 
         // don't forget
         cb.forget();
     }
 
     fn play_word(&self, word: &str) {
-        let word_url = audio_url!(prounc=self.prounc as u8, word=word);
+        let word_url = audio_url!(prounc = self.prounc as u8, word = word);
         self.play_audio_from_url(&word_url);
     }
 
@@ -149,7 +152,7 @@ impl Keyboard {
                                 _ => Key::SelectProunc(Pronunc::AmE as u8)
                             }
                         })>
-                        {for Pronunc::iterator().map(|o| html!{<option value=*o as u8>{o}</option>} )}
+                        {for Pronunc::iterator().map(|o| html!{<option value=o.to_string()>{o}</option>} )}
                         </select>
                    </div>
                    <div class="col-6"></div>
@@ -165,7 +168,7 @@ impl Keyboard {
                                }
                            }
                        } )>
-                       { for DICT_INDEX.iter().map(|b| html! { <option value=b>{ b }</option> }) }
+                       { for DICT_INDEX.iter().map(|b| html! { <option value=*b>{ b }</option> }) }
                    </select>
                    </div>
                    <div class="col-2">
@@ -183,9 +186,9 @@ impl Keyboard {
                        {
                            for chapers.iter().map(|b| {
                                if *b == self.cur_chaper {
-                                   html! { <option value=b selected=true>{ format!("Charper {}", b) }</option> }
+                                   html! { <option value=b.to_string() selected=true>{ format!("Charper {}", b) }</option> }
                                } else {
-                                   html! { <option value=b>{ format!("Charper {}", b) }</option> }
+                                   html! { <option value=b.to_string()>{ format!("Charper {}", b) }</option> }
                                }
                            })
                        }
@@ -252,8 +255,7 @@ impl Component for Keyboard {
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
         let cur_level = DICT_INDEX[0].to_string();
-        let dict: serde_json::Value =
-            serde_json::from_str(DICT_MAP[&cur_level]).unwrap();
+        let dict: serde_json::Value = serde_json::from_str(DICT_MAP[&cur_level]).unwrap();
 
         let nr_word: usize = dict.as_array().unwrap().len();
         let cur_index = 0;
@@ -276,8 +278,8 @@ impl Component for Keyboard {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-	match msg {
-	    Key::SetText(text) => {
+        match msg {
+            Key::SetText(text) => {
                 if self.start_status != String::from("Pause") || text.len() != 1 {
                     return true;
                 }
@@ -303,14 +305,14 @@ impl Component for Keyboard {
                 } else {
                     self.inputs.clear();
                 }
-	    }
-        Key::SelectProunc(prounc) => {
-            self.prounc = prounc.into();
-            let msg = format!("> select audio type: {}.", self.prounc);
-            ConsoleService::debug(&msg);
-            self.play_word(self.dict[self.cur_index]["name"].as_str().unwrap());
-        }
-	    Key::SelectLevel(level) => {
+            }
+            Key::SelectProunc(prounc) => {
+                self.prounc = prounc.into();
+                let msg = format!("> select audio type: {}.", self.prounc);
+                ConsoleService::debug(&msg);
+                self.play_word(self.dict[self.cur_index]["name"].as_str().unwrap());
+            }
+            Key::SelectLevel(level) => {
                 self.cur_level = level;
                 let msg = format!("> select level: {}.", self.cur_level);
                 ConsoleService::debug(&msg);
@@ -321,12 +323,12 @@ impl Component for Keyboard {
                 self.cur_index = 0;
                 self.cur_chaper = self.cur_index / 20 + 1;
             }
-	    Key::SelectChapter(chaper) => {
-                self.cur_index = (chaper - 1 ) * 20;
+            Key::SelectChapter(chaper) => {
+                self.cur_index = (chaper - 1) * 20;
                 let msg = format!("> select chaper: {}.", chaper);
                 ConsoleService::debug(&msg);
             }
-	    Key::WordNextPre(text) => {
+            Key::WordNextPre(text) => {
                 if self.start_status == String::from("Start") {
                     return true;
                 }
@@ -340,14 +342,14 @@ impl Component for Keyboard {
                     if self.cur_index <= 0 {
                         self.cur_index = self.nr_word - 1;
                     } else {
-                        self.cur_index = self.cur_index -1;
+                        self.cur_index = self.cur_index - 1;
                     }
                 }
                 self.cur_chaper = self.cur_index / 20 + 1;
 
                 self.play_word(self.dict[self.cur_index]["name"].as_str().unwrap());
             }
-	    Key::Submit => {
+            Key::Submit => {
                 if self.start_status == String::from("Start") {
                     self.start_status = String::from("Pause");
                     self.start_class = String::from("btn btn-secondary btn-sm");
@@ -357,8 +359,8 @@ impl Component for Keyboard {
                     self.start_status = String::from("Start");
                     self.start_class = String::from("btn btn-primary btn-sm");
                 }
-	    }
-	}
+            }
+        }
 
         true
     }
@@ -381,4 +383,3 @@ impl Component for Keyboard {
         }
     }
 }
-

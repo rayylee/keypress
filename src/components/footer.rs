@@ -22,12 +22,12 @@ impl Component for Footer {
         html! {
             <>
                 <div id="footer">
-		    <font color="#946F7C">{ "Powered by " }</font>
-		    <a href="https://yew.rs">{ "Yew" }</a>
-		    <font color="#946F7C">{ " using " }</font>
-		    <a href="https://www.rust-lang.org">{ "Rust" }</a>
-		    <font color="#946F7C">{ " and crates from " } </font>
-		    <a href="https://crates.io">{ "Crates" }</a>
+            <font color="#946F7C">{ "Powered by " }</font>
+            <a href="https://yew.rs">{ "Yew" }</a>
+            <font color="#946F7C">{ " using " }</font>
+            <a href="https://www.rust-lang.org">{ "Rust" }</a>
+            <font color="#946F7C">{ " and crates from " } </font>
+            <a href="https://crates.io">{ "Crates" }</a>
                 </div>
             </>
         }
