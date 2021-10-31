@@ -152,7 +152,7 @@ impl Keyboard {
                                 _ => Key::SelectProunc(Pronunc::AmE as u8)
                             }
                         })>
-                        {for Pronunc::iterator().map(|o| html!{<option value=o.to_string()>{o}</option>} )}
+                        {for Pronunc::iterator().map(|o| html!{<option value=(*o as u8).to_string()>{o}</option>} )}
                         </select>
                    </div>
                    <div class="col-6"></div>
