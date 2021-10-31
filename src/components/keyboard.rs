@@ -51,6 +51,8 @@ impl From<u8> for Pronunc {
 }
 
 const SOUND_CLICK: &[u8] = include_bytes!("../content/sound/click.wav");
+const SOUND_CORRECT: &[u8] = include_bytes!("../content/sound/correct.mp3");
+const SOUND_WRONG: &[u8] = include_bytes!("../content/sound/wrong.mp3");
 
 const DICT_PROGRAMMER: &str = include_str!("../content/dicts/it-words.json");
 const DICT_CET4: &str = include_str!("../content/dicts/CET4_T.json");
@@ -125,6 +127,14 @@ impl Keyboard {
 
         // don't forget
         cb.forget();
+    }
+
+    fn play_correct(&self) {
+        self.play_audio_from_array(SOUND_CORRECT);
+    }
+
+    fn play_wrong(&self) {
+        self.play_audio_from_array(SOUND_WRONG);
     }
 
     fn play_word(&self, word: &str) {
@@ -299,10 +309,11 @@ impl Component for Keyboard {
                             self.cur_index = 0;
                         }
                         self.cur_chaper = self.cur_index / 20 + 1;
-
+                        self.play_correct();
                         self.play_word(self.dict[self.cur_index]["name"].as_str().unwrap());
                     }
                 } else {
+                    self.play_wrong();
                     self.inputs.clear();
                 }
             }
