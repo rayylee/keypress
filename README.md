@@ -6,6 +6,11 @@ A Rust WebAssembly Websit example for practising english for chinese.
 
 The `KeyPress` is built with trunk. You can install it with the following command:
 ```
+# Install WebAssembly target
+# The compilation target for browser-based WebAssembly is called "wasm32-unknown-unknown".
+# The following command will add this target to your development environment.
+rustup target add wasm32-unknown-unknown
+
 # Install trunk and wasm-bindgen-cli
 # At some point in the future, trunk will automatically download wasm-bindgen
 cargo install trunk wasm-bindgen-cli
